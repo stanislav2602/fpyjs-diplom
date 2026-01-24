@@ -6,21 +6,56 @@
  * */
 class VK {
 
-  static ACCESS_TOKEN = '958eb5d439726565e9333aa30e50e0f937ee432e927f0dbd541c541887d919a7c56f95c04217915c32008';
-  static lastCallback;
+    static ACCESS_TOKEN = 'Введите токен VK (Service token)';
+    static lastCallback;
 
-  /**
-   * Получает изображения
-   * */
-  static get(id = '', callback){
+    /**
+     * Получает изображения
+     * */
+    static get(id = '', callback) {
+        if (!id.trim()) {
+            callback([]);
+            return;
+        }
 
-  }
+        this.lastCallback = callback;
 
-  /**
-   * Передаётся в запрос VK API для обработки ответа.
-   * Является обработчиком ответа от сервера.
-   */
-  static processData(result){
+        const script = document.createElement('script');
+        script.src = `https://api.vk.com/method/photos.get?owner_id=${id}&album_id=profile&extended=1&photo_sizes=1&access_token=${this.ACCESS_TOKEN}&v=5.131&callback=VK.processData`;
+        document.body.appendChild(script);
+    }
 
-  }
+    /**
+     * Передаётся в запрос VK API для обработки ответа.
+     * Является обработчиком ответа от сервера.
+     */
+    static processData(result) {
+        const script = document.querySelector('script[src*="api.vk."]');
+        if (script) {
+            script.remove();
+        }
+
+        if (result.error) {
+            alert(`Ошибка VK: ${result.error.error_msg}`);
+            this.lastCallback([]);
+            this.lastCallback = () => {};
+            return;
+        }
+
+        const images = [];
+        if (result.response && result.response.items) {
+            result.response.items.forEach(item => {
+                const sizes = item.sizes;
+                if (sizes && sizes.length > 0) {
+                    const largest = sizes.reduce((prev, current) => 
+                        (current.width * current.height) > (prev.width * prev.height) ? current : prev
+                    );
+                    images.push(largest.url);
+                }
+            });
+        }
+
+        this.lastCallback(images);
+        this.lastCallback = () => {};
+    }
 }
