@@ -87,7 +87,6 @@ class PreviewModal extends BaseModal {
         const sizeInKb = (item.size / 1024).toFixed(1);
         const formattedDate = this.formatDate(item.created);
         
-        // Соответствует макету из задания - заглушка для изображения
         const imageUrl = 'https://yugcleaning.ru/wp-content/themes/consultix/images/no-image-found-360x250.png';
         
         return `
