@@ -22,15 +22,21 @@ class Yandex {
         return token;
     }
 
+    static checkToken(callback) {
+        const token = this.getToken();
+        if (!token) {
+            callback('Токен не найден', null);
+            return null;
+        }
+        return token;
+    }
+
     /**
      * Метод загрузки файла в облако
      */
     static uploadFile(path, url, callback) {
-        const token = this.getToken();
-        if (!token) {
-            callback('Токен не найден', null);
-            return;
-        }
+        const token = this.checkToken(callback);
+        if (!token) return;
 
         createRequest({
             method: 'POST',
@@ -50,11 +56,8 @@ class Yandex {
      * Метод удаления файла из облако
      */
     static removeFile(path, callback) {
-        const token = this.getToken();
-        if (!token) {
-            callback('Токен не найден', null);
-            return;
-        }
+        const token = this.checkToken(callback);
+        if (!token) return;
 
         createRequest({
             method: 'DELETE',
@@ -74,11 +77,8 @@ class Yandex {
      * Метод получения всех загруженных файлов в облаке
      */
     static getUploadedFiles(callback) {
-        const token = this.getToken();
-        if (!token) {
-            callback('Токен не найден', null);
-            return;
-        }
+        const token = this.checkToken(callback);
+        if (!token) return;
 
         createRequest({
             method: 'GET',
@@ -93,17 +93,18 @@ class Yandex {
     /**
      * Метод скачивания файлов
      */
-static downloadFileByUrl(url) {
-    if (!url) return;
-    
-    const link = document.createElement('a');
-    
-    link.href = url;
-    link.download = '';
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}}
+    static downloadFileByUrl(url) {
+        if (!url) return;
+        
+        const link = document.createElement('a');
+        
+        link.href = url;
+        link.download = '';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}

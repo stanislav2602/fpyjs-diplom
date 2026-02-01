@@ -59,10 +59,13 @@ class ImageViewer {
             
             Yandex.getUploadedFiles((err, data) => {
                 if (err) {
-                    alert(`Ошибка: ${err}`);
+                    alert(`Ошибка: ${err.message || err}`);
+                    content.innerHTML = '<div class="ui red message">Ошибка загрузки файлов</div>';
                     return;
                 }
-                modal.showImages(data.items || []);
+                
+                const files = data && data.items ? data.items : [];
+                modal.showImages(files);
             });
         });
 
@@ -86,7 +89,6 @@ class ImageViewer {
         this.previewImage.src = 'https://yugcleaning.ru/wp-content/themes/consultix/images/no-image-found-360x250.png';
         this.checkButtonText();
     }
-
     /**
      * Отрисовывает изображения.
      */

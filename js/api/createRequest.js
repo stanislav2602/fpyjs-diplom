@@ -25,7 +25,11 @@ const createRequest = (options = {}) => {
         if (xhr.status >= 200 && xhr.status < 300) {
             options.callback(null, xhr.response);
         } else {
-            options.callback(xhr.statusText || 'Ошибка запроса', null);
+            options.callback({
+                status: xhr.status,
+                message: xhr.statusText || 'Ошибка запроса',
+                response: xhr.response
+            }, null);
         }
     };
 

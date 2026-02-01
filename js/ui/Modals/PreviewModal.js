@@ -31,15 +31,13 @@ class PreviewModal extends BaseModal {
                 
                 Yandex.removeFile(path, (err, response) => {
                     if (err) {
-                        alert(`Ошибка удаления: ${err}`);
+                        alert(`Ошибка удаления: ${err.message || err}`);
                         icon.className = 'trash icon';
                         button.classList.remove('disabled');
                         return;
                     }
                     
-                    if (response === null) {
-                        button.closest('.image-preview-container').remove();
-                    }
+                    button.closest('.image-preview-container').remove();
                 });
             }
             
@@ -50,7 +48,6 @@ class PreviewModal extends BaseModal {
             }
         });
     }
-
     /**
      * Отрисовывает изображения в блоке всплывающего окна
      */
@@ -87,7 +84,7 @@ class PreviewModal extends BaseModal {
         const sizeInKb = (item.size / 1024).toFixed(1);
         const formattedDate = this.formatDate(item.created);
         
-        const imageUrl = 'https://yugcleaning.ru/wp-content/themes/consultix/images/no-image-found-360x250.png';
+        const imageUrl = item.preview || item.file || 'https://yugcleaning.ru/wp-content/themes/consultix/images/no-image-found-360x250.png';
         
         return `
             <div class="image-preview-container">
