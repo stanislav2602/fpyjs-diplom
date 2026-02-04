@@ -1,6 +1,6 @@
 /**
  * Класс PreviewModal
- * Используется как обозреватель загруженный файлов в облако
+ * Используется как обозреватель загруженных файлов в облако
  */
 class PreviewModal extends BaseModal {
     constructor(element) {
@@ -40,14 +40,43 @@ class PreviewModal extends BaseModal {
                     button.closest('.image-preview-container').remove();
                 });
             }
-            
+
             if (e.target.classList.contains('download') || e.target.closest('.download')) {
                 const button = e.target.classList.contains('download') ? e.target : e.target.closest('.download');
-                const fileUrl = button.dataset.file;
-                Yandex.downloadFileByUrl(fileUrl);
+                const filePath = button.dataset.file;
+
+                const token = Yandex.getToken();
+                if (!token) {
+                    alert('Токен не найден');
+                    return;
+                }
+                
+                createRequest({
+                    method: 'GET',
+                    url: `${Yandex.HOST}/resources/download`,
+                    headers: {
+                        'Authorization': `OAuth ${token}`
+                    },
+                    data: {
+                        path: filePath
+                    },
+                    callback: (err, data) => {
+                        if (err) {
+                            alert(`Ошибка получения ссылки: ${err.message || err}`);
+                            return;
+                        }
+                        
+                        if (data && data.href) {
+                            Yandex.downloadFileByUrl(data.href);
+                        } else {
+                            alert('Не удалось получить ссылку для скачивания');
+                        }
+                    }
+                });
             }
         });
     }
+    
     /**
      * Отрисовывает изображения в блоке всплывающего окна
      */
@@ -60,7 +89,7 @@ class PreviewModal extends BaseModal {
     /**
      * Форматирует дату в формате 2021-12-30T20:40:02+00:00(строка)
      * в формат «30 декабря 2021 г. в 23:40» (учитывая временной пояс)
-     * */
+     */
     formatDate(date) {
         const d = new Date(date);
         const months = [
@@ -83,9 +112,9 @@ class PreviewModal extends BaseModal {
     getImageInfo(item) {
         const sizeInKb = (item.size / 1024).toFixed(1);
         const formattedDate = this.formatDate(item.created);
-        
-        const imageUrl = item.preview || item.file || 'https://yugcleaning.ru/wp-content/themes/consultix/images/no-image-found-360x250.png';
-        
+
+        const imageUrl = 'https://yugcleaning.ru/wp-content/themes/consultix/images/no-image-found-360x250.png';
+
         return `
             <div class="image-preview-container">
                 <img src="${imageUrl}" style="width: 170px; height: auto;" />
@@ -102,7 +131,7 @@ class PreviewModal extends BaseModal {
                         Удалить
                         <i class="trash icon"></i>
                     </button>
-                    <button class="ui labeled icon violet basic button download" data-file="${item.file}">
+                    <button class="ui labeled icon violet basic button download" data-file="${item.path}">
                         Скачать
                         <i class="download icon"></i>
                     </button>

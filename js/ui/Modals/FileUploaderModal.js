@@ -16,7 +16,7 @@ class FileUploaderModal extends BaseModal {
      * 3. Клик по кнопке "Отправить все файлы" на всплывающем окне, вызывает метод sendAllImages
      * 4. Клик по кнопке загрузке по контроллерам изображения: 
      * убирает ошибку, если клик был по полю вода
-     * отправляет одно изображение, если клик был по кнопке отправки
+     * отправляет одно изображение, если клик был на кнопке отправки
      */
     registerEvents() {
         const closeIcon = this.element.querySelector('.header .x.icon');
@@ -85,30 +85,50 @@ class FileUploaderModal extends BaseModal {
      * Валидирует изображение и отправляет его на сервер
      */
     sendImage(imageContainer) {
-        const input = imageContainer.querySelector('input');
-        const path = input.value.trim();
-        
-        if (!path) {
-            input.closest('.ui.action.input').classList.add('error');
+    const input = imageContainer.querySelector('input');
+    const path = input.value.trim();
+    
+    if (!path) {
+        input.closest('.ui.action.input').classList.add('error');
+        return;
+    }
+    
+    input.closest('.ui.action.input').classList.add('disabled');
+    const button = imageContainer.querySelector('button');
+    const icon = button.querySelector('i');
+    icon.className = 'spinner loading icon';
+    
+    const imageUrl = imageContainer.querySelector('img').src;
+    
+    Yandex.uploadFile(path, imageUrl, (err, response) => {
+        if (err || !response?.href) {
+            alert(err || 'Не удалось получить ссылку');
+            input.closest('.ui.action.input').classList.remove('disabled');
+            icon.className = 'upload icon';
             return;
         }
-        
-        input.closest('.ui.action.input').classList.add('disabled');
-        const imageUrl = imageContainer.querySelector('img').src;
-        
-        Yandex.uploadFile(path, imageUrl, (err, response) => {
-            if (err) {
-                alert(`Ошибка загрузки: ${err}`);
+
+        fetch(imageUrl)
+            .then(r => r.blob())
+            .then(blob => fetch(response.href, {
+                method: 'PUT',
+                body: blob,
+                headers: { 'Content-Type': blob.type || 'application/octet-stream' }
+            }))
+            .then(r => {
+                if (r.ok) {
+                    imageContainer.remove();
+                    this.imageContainers = this.element.querySelectorAll('.image-preview-container');
+                    if (this.imageContainers.length === 0) this.close();
+                } else {
+                    throw new Error(`Ошибка загрузки: ${r.status}`);
+                }
+            })
+            .catch(e => {
+                alert(e.message);
                 input.closest('.ui.action.input').classList.remove('disabled');
-                return;
-            }
-            
-            imageContainer.remove();
-            this.imageContainers = this.element.querySelectorAll('.image-preview-container');
-            
-            if (this.imageContainers.length === 0) {
-                this.close();
-            }
-        });
-    }
+                icon.className = 'upload icon';
+            });
+    });
+}
 }

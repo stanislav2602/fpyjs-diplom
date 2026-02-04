@@ -2,7 +2,7 @@
  * Класс Yandex
  * Используется для управления облаком.
  * Имеет свойство HOST
- * */
+ */
 class Yandex {
     static HOST = 'https://cloud-api.yandex.net/v1/disk';
 
@@ -25,7 +25,7 @@ class Yandex {
     static checkToken(callback) {
         const token = this.getToken();
         if (!token) {
-            callback('Токен не найден', null);
+            if (callback) callback('Токен не найден', null);
             return null;
         }
         return token;
@@ -36,38 +36,39 @@ class Yandex {
      */
     static uploadFile(path, url, callback) {
         const token = this.checkToken(callback);
-        if (!token) return;
+        if (!token) {
+            if (callback) callback('Токен не найден', null);
+            return;
+        }
 
         createRequest({
-            method: 'POST',
+            method: 'GET',
             url: `${this.HOST}/resources/upload`,
             headers: {
                 'Authorization': `OAuth ${token}`
             },
             data: {
                 path: path,
-                url: url
+                overwrite: 'true'
             },
             callback: callback
         });
     }
 
     /**
-     * Метод удаления файла из облако
+     * Метод удаления файла из облака
      */
     static removeFile(path, callback) {
         const token = this.checkToken(callback);
         if (!token) return;
 
+        const url = `${this.HOST}/resources?path=${encodeURIComponent(path)}&permanently=true`;
+        
         createRequest({
             method: 'DELETE',
-            url: `${this.HOST}/resources`,
+            url: url,
             headers: {
                 'Authorization': `OAuth ${token}`
-            },
-            data: {
-                path: path,
-                permanently: true
             },
             callback: callback
         });
@@ -86,7 +87,19 @@ class Yandex {
             headers: {
                 'Authorization': `OAuth ${token}`
             },
-            callback: callback
+            callback: (err, data) => {
+                if (err) {
+                    callback(err, null);
+                    return;
+                }
+                
+                if (!data || !data.items) {
+                    callback(null, { items: [] });
+                    return;
+                }
+
+                callback(null, data);
+            }
         });
     }
 
